@@ -16,4 +16,4 @@ class User(Base):
     is_active = Column(Boolean, server_default="True")
     is_superuser = Column(Boolean, server_default="False")
 
-    comments = relationship('Comment', back_populates="user")
+    comments = relationship('Comment', back_populates="users")

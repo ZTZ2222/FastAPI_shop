@@ -11,4 +11,4 @@ class Brand(Base):
     name = Column(String, unique=True, index=True)
 
     products = relationship(
-        'Product', back_populates="brand", cascade="all, delete", lazy=True)
+        'Product', back_populates="brands", cascade="all, delete", lazy=True)
