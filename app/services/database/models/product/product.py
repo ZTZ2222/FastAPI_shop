@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
 
-from app.services.database.database import Base
+from app.services.database.session import Base
 
 
 class Product(Base):

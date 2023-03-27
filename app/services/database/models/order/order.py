@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Numeric, Identity, ForeignKey
 from sqlalchemy.orm import relationship
 
-from app.services.database.database import Base
+from app.services.database.session import Base
 
 
 class Order(Base):

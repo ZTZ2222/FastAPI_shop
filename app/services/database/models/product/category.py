@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Identity, Integer, String
 from sqlalchemy.orm import relationship
 
-from app.services.database.database import Base
+from app.services.database.session import Base
 
 
 class Category(Base):
