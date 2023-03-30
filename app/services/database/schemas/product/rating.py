@@ -1,12 +1,12 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import Body
 from pydantic import BaseModel
 
 
 @dataclass
-class CommentBodySpec:
+class RatingBodySpec:
     item: Any = Body(
         ...,
         example={
@@ -17,9 +17,9 @@ class CommentBodySpec:
     )
 
 
-class CommentDTO(BaseModel):
+class RatingDTO(BaseModel):
     product_id: int
-    text: str
+    text: Optional[str]
     rating: int
 
     class Config:

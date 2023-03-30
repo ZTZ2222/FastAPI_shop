@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
 
-from app.services.database.session import Base
+from app.services.database.database import Base
 
 
 class Product(Base):
@@ -23,4 +23,4 @@ class Product(Base):
 
     category = relationship('Category', back_populates="products")
     brand = relationship('Brand', back_populates="products")
-    comments = relationship('Comment', back_populates="products")
+    ratings = relationship('Rating', back_populates="product")

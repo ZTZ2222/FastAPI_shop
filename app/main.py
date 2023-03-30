@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 
 from app.api import routes
-
 
 app = FastAPI()
 
@@ -20,5 +20,5 @@ app.include_router(routes.api_router)
 
 
 @app.get("/")
-def root():
-    return {"message": "Welcome to my shop-api! Hello buddy!"}
+async def root():
+    return {"Hello": "World"}

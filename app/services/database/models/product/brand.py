@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Identity, Integer, String
 from sqlalchemy.orm import relationship
 
-from app.services.database.session import Base
+from app.services.database.database import Base
 
 
 class Brand(Base):
@@ -11,4 +11,4 @@ class Brand(Base):
     name = Column(String, unique=True, index=True)
 
     products = relationship(
-        'Product', back_populates="brands", cascade="all, delete", lazy=True)
+        'Product', back_populates="brand", cascade="all, delete", lazy=True)

@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Numeric, Identity, ForeignKey
 from sqlalchemy.orm import relationship
 
-from app.services.database.session import Base
+from app.services.database.database import Base
 
 
 class Order(Base):
@@ -15,7 +15,7 @@ class Order(Base):
     country = Column(String)
     telephone = Column(String)
 
-    items = relationship('Item', back_populates="orders")
+    items = relationship('Item', back_populates="order")
 
 
 class Item(Base):
