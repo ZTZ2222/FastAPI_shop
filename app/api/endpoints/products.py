@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.database.database import DatabaseManager
 from app.config.settings import settings
-from app.services.database.repositories.product.product_repository import ProductRepository, ColorRepository, SizeRepository
-from app.services.database.schemas.product.product import ProductCreate, ProductResponse, ProductUpdate, ColorDTO, SizeDTO
+from app.services.database.repositories.product import ProductRepository, ColorRepository, SizeRepository, RatingRepository
+from app.services.database.schemas.product import ProductCreate, ProductResponse, ProductUpdate, ColorDTO, SizeDTO, RatingDTO
 
 router = APIRouter(
     prefix="/products",
@@ -71,7 +71,9 @@ async def delete_product(product: ProductUpdate, session: AsyncSession = Depends
     return {"detail": f"Product with id: {deleted_product.id} has been successfully deleted"}
 
 
-""" Colors routes """
+##########################
+# BLOCK FOR COLOR ROUTES #
+##########################
 
 
 @router.post("/colors/create", response_model=ColorDTO, status_code=status.HTTP_201_CREATED)
@@ -147,7 +149,9 @@ async def color_get_all(session: AsyncSession = Depends(db.get_db_session)):
     return colors
 
 
-""" Sizes routes """
+#########################
+# BLOCK FOR SIZE ROUTES #
+#########################
 
 
 @router.post("/sizes/create", response_model=SizeDTO, status_code=status.HTTP_201_CREATED)
@@ -221,3 +225,77 @@ async def size_get_all(session: AsyncSession = Depends(db.get_db_session)):
                             detail=f"No size found")
 
     return sizes
+
+
+###########################
+# BLOCK FOR RATING ROUTES #
+###########################
+
+
+@router.post("/ratings/create", response_model=RatingDTO, status_code=status.HTTP_201_CREATED)
+async def create_new_rating(rating: RatingDTO, session: AsyncSession = Depends(db.get_db_session)):
+
+    rating_crud = RatingRepository(session)
+
+    new_rating = await rating_crud.create_rating(rating)
+    return new_rating
+
+
+@router.put("/ratings/update", response_model=RatingDTO, status_code=status.HTTP_200_OK)
+async def rating_update(rating: RatingDTO, session: AsyncSession = Depends(db.get_db_session)):
+
+    rating_crud = RatingRepository(session)
+
+    rating_db = await rating_crud.get_rating_by_id(id=rating.id)
+
+    if not rating_db:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Rating with id: {rating.id} does not exist")
+
+    updated_rating = await rating_crud.update_rating(rating)
+
+    return updated_rating
+
+
+@router.delete("/ratings/delete", response_model=RatingDTO, status_code=status.HTTP_200_OK)
+async def rating_delete(rating: RatingDTO, session: AsyncSession = Depends(db.get_db_session)):
+
+    rating_crud = RatingRepository(session)
+
+    rating_db = await rating_crud.get_rating_by_id(id=rating.id)
+
+    if not rating_db:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Rating with id: {rating.id} does not exist")
+
+    deleted_rating = await rating_crud.delete_rating(rating)
+
+    return Response(status_code=status.HTTP_200_OK, content=f"Rating with id: {deleted_rating.id} has been deleted")
+
+
+@router.get("/ratings/{id}", response_model=RatingDTO, status_code=status.HTTP_200_OK)
+async def rating_get_by_id(id: int, session: AsyncSession = Depends(db.get_db_session)):
+
+    rating_crud = RatingRepository(session)
+
+    rating_db = await rating_crud.get_rating_by_id(id=id)
+
+    if not rating_db:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Rating with id: {id} does not exist")
+
+    return rating_db
+
+
+@router.get("/ratings/", response_model=Sequence[RatingDTO], status_code=status.HTTP_200_OK)
+async def rating_get_all(session: AsyncSession = Depends(db.get_db_session)):
+
+    rating_crud = RatingRepository(session)
+
+    ratings = await rating_crud.get_all_ratings()
+
+    if not ratings:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"No rating found")
+
+    return ratings
