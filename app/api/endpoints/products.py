@@ -1,11 +1,12 @@
+from typing import Sequence
 from fastapi import APIRouter, Depends, HTTPException, Response, status
-from sqlalchemy.exc import DBAPIError, IntegrityError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.database.database import DatabaseManager
 from app.config.settings import settings
-from app.services.database.repositories.product.product_repository import ProductRepository
-from app.services.database.schemas.product.product import ProductCreate, ProductResponse, ProductUpdate
+from app.services.database.repositories.product.product_repository import ProductRepository, ColorRepository, SizeRepository
+from app.services.database.schemas.product.product import ProductCreate, ProductResponse, ProductUpdate, ColorDTO, SizeDTO
 
 router = APIRouter(
     prefix="/products",
@@ -68,3 +69,155 @@ async def delete_product(product: ProductUpdate, session: AsyncSession = Depends
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Product has been not found")
     return {"detail": f"Product with id: {deleted_product.id} has been successfully deleted"}
+
+
+""" Colors routes """
+
+
+@router.post("/colors/create", response_model=ColorDTO, status_code=status.HTTP_201_CREATED)
+async def create_new_color(color: ColorDTO, session: AsyncSession = Depends(db.get_db_session)):
+
+    color_crud = ColorRepository(session)
+
+    color_exists = await color_crud.get_product_color_by_name(name=color.name)
+    if color_exists:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                            detail="This color name is already registered.")
+    new_color = await color_crud.create_product_color(color)
+    return new_color
+
+
+@router.put("/colors/update", response_model=ColorDTO, status_code=status.HTTP_200_OK)
+async def color_update(color: ColorDTO, session: AsyncSession = Depends(db.get_db_session)):
+
+    color_crud = ColorRepository(session)
+
+    color_db = await color_crud.get_product_color_by_id(id=color.id)
+
+    if not color_db:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Color with id: {color.id} does not exist")
+
+    updated_color = await color_crud.update_product_color(color)
+
+    return updated_color
+
+
+@router.delete("/colors/delete", response_model=ColorDTO, status_code=status.HTTP_200_OK)
+async def color_delete(color: ColorDTO, session: AsyncSession = Depends(db.get_db_session)):
+
+    color_crud = ColorRepository(session)
+
+    color_db = await color_crud.get_product_color_by_id(id=color.id)
+
+    if not color_db:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Color with id: {color.id} does not exist")
+
+    deleted_color = await color_crud.delete_product_color(color)
+
+    return Response(status_code=status.HTTP_200_OK, content=f"Color with id: {deleted_color.id} has been deleted")
+
+
+@router.get("/colors/{id}", response_model=ColorDTO, status_code=status.HTTP_200_OK)
+async def color_get_by_id(id: int, session: AsyncSession = Depends(db.get_db_session)):
+
+    color_crud = ColorRepository(session)
+
+    color_db = await color_crud.get_product_color_by_id(id=id)
+
+    if not color_db:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Color with id: {id} does not exist")
+
+    return color_db
+
+
+@router.get("/colors/", response_model=Sequence[ColorDTO], status_code=status.HTTP_200_OK)
+async def color_get_all(session: AsyncSession = Depends(db.get_db_session)):
+
+    color_crud = ColorRepository(session)
+
+    colors = await color_crud.get_all_product_colors()
+
+    if not colors:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"No color found")
+
+    return colors
+
+
+""" Sizes routes """
+
+
+@router.post("/sizes/create", response_model=SizeDTO, status_code=status.HTTP_201_CREATED)
+async def create_new_size(size: SizeDTO, session: AsyncSession = Depends(db.get_db_session)):
+
+    size_crud = SizeRepository(session)
+
+    size_exists = await size_crud.get_product_size_by_name(name=size.name)
+    if size_exists:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                            detail="This product size is already registered.")
+    new_size = await size_crud.create_product_size(size)
+    return new_size
+
+
+@router.put("/sizes/update", response_model=SizeDTO, status_code=status.HTTP_200_OK)
+async def size_update(size: SizeDTO, session: AsyncSession = Depends(db.get_db_session)):
+
+    size_crud = SizeRepository(session)
+
+    size_db = await size_crud.get_product_size_by_id(id=size.id)
+
+    if not size_db:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Size with id: {size.id} does not exist")
+
+    updated_size = await size_crud.update_product_size(size)
+
+    return updated_size
+
+
+@router.delete("/sizes/delete", response_model=SizeDTO, status_code=status.HTTP_200_OK)
+async def size_delete(size: SizeDTO, session: AsyncSession = Depends(db.get_db_session)):
+
+    size_crud = SizeRepository(session)
+
+    size_db = await size_crud.get_product_size_by_id(id=size.id)
+
+    if not size_db:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Size with id: {size.id} does not exist")
+
+    deleted_size = await size_crud.delete_product_size(size)
+
+    return Response(status_code=status.HTTP_200_OK, content=f"Size with id: {deleted_size.id} has been deleted")
+
+
+@router.get("/sizes/{id}", response_model=SizeDTO, status_code=status.HTTP_200_OK)
+async def size_get_by_id(id: int, session: AsyncSession = Depends(db.get_db_session)):
+
+    size_crud = SizeRepository(session)
+
+    size_db = await size_crud.get_product_size_by_id(id=id)
+
+    if not size_db:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Size with id: {id} does not exist")
+
+    return size_db
+
+
+@router.get("/sizes/", response_model=Sequence[SizeDTO], status_code=status.HTTP_200_OK)
+async def size_get_all(session: AsyncSession = Depends(db.get_db_session)):
+
+    size_crud = SizeRepository(session)
+
+    sizes = await size_crud.get_all_product_sizes()
+
+    if not sizes:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"No size found")
+
+    return sizes

@@ -35,9 +35,9 @@ class BaseRepository(ABC):
             result = await session.scalar(stmt)
         return result
 
-    async def _select_all(self, *args: Any) -> DBModel:
+    async def _select_all(self) -> Sequence[DBModel]:
         async with self.session as session:
-            stmt = select(self.model).where(*args)
+            stmt = select(self.model)
             result = await session.scalars(stmt)
         return result.all()
 

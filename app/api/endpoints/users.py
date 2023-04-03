@@ -1,3 +1,4 @@
+from typing import Sequence
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -60,7 +61,7 @@ async def user_delete(user_credentials: UserUpdate, session: AsyncSession = Depe
 
 
 @router.get("/{id}", response_model=UserResponse, status_code=status.HTTP_200_OK)
-async def user_view(id: int, session: AsyncSession = Depends(db.get_db_session)):
+async def user_get_by_id(id: int, session: AsyncSession = Depends(db.get_db_session)):
 
     user_crud = UserRepository(session)
 
@@ -71,3 +72,17 @@ async def user_view(id: int, session: AsyncSession = Depends(db.get_db_session))
                             detail=f"User with id: {id} does not exist")
 
     return user
+
+
+@router.get("/", response_model=Sequence[UserResponse], status_code=status.HTTP_200_OK)
+async def user_get_all(session: AsyncSession = Depends(db.get_db_session)):
+
+    user_crud = UserRepository(session)
+
+    users = await user_crud.get_all_users()
+
+    if not users:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"No users found")
+
+    return users

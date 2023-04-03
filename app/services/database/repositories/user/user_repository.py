@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.database.models import User
@@ -27,6 +27,9 @@ class UserRepository(BaseRepository):
 
     async def get_user_by_id(self, id: int) -> User:
         return await self._select_one(User.id == id)
+
+    async def get_all_users(self) -> Sequence[User]:
+        return await self._select_all()
 
     async def activate_user(self, user: UserUpdate) -> User:
         payload = {"is_active": True}
