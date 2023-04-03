@@ -11,21 +11,21 @@ class RatingBodySpec:
         ...,
         example={
             "product_id": 1,
-            "text": "Bad sensor, my broke after 1 month",
-            "rating": 0,
+            "comment": "This product exceeded my expectations. Highly recommend it!",
+            "stars": 5,
         },
     )
 
 
 class RatingDTO(BaseModel):
     product_id: int
-    text: Optional[str]
-    rating: int
+    stars: float
+    comment: Optional[str]
 
     class Config:
         orm_mode = True
         schema_extra = {
             "product_id": 1,
-            "text": "Good CPU and performance",
-            "rating": 5,
+            "comment": "This product exceeded my expectations. Highly recommend it!",
+            "stars": 5,
         }

@@ -1,4 +1,4 @@
-from app.services.database.schemas.order.order import OrderBodySpec, OrderDTO
+from .order import OrderBodySpec, OrderDTO, OrderItemDTO
 
 
-__all__ = ("OrderBodySpec", "OrderDTO")
+__all__ = ("OrderBodySpec", "OrderDTO", "OrderItemDTO")

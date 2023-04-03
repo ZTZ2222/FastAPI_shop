@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import Body
 from pydantic import BaseModel
@@ -10,16 +10,17 @@ class CategoryBodySpec:
     item: Any = Body(
         ...,
         example={
-            "name": "Laptop"
+            "name": "Clothing and Accessories"
         },
     )
 
 
 class CategoryDTO(BaseModel):
+    id: Optional[int]
     name: str
 
     class Config:
         orm_mode = True
         schema_extra = {
-            "name": "Laptop"
+            "name": "Clothing and Accessories"
         }

@@ -2,9 +2,7 @@ from typing import Callable
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from app.config.settings import Settings
-from sqlalchemy.ext.declarative import declarative_base
-
-Base = declarative_base()
+from .models import Base
 
 
 class DatabaseManager:

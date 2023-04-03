@@ -1,4 +1,4 @@
-from app.services.database.schemas.user.user import UserBase, UserCreate, UserUpdate, UserResponse, UserInDB, UserInDBBase
+from .user import UserBase, UserCreate, UserUpdate, UserResponse, UserInDB
 
 __all__ = ("UserBase", "UserCreate", "UserUpdate",
-           "UserResponse", "UserInDB", "UserInDBBase")
+           "UserResponse", "UserInDB")

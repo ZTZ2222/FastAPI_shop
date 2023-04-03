@@ -3,37 +3,35 @@ from pydantic import BaseModel, EmailStr
 
 
 class UserBase(BaseModel):
-    username: Optional[str] = None
-    email: Optional[EmailStr] = None
-    is_active: Optional[bool] = True
-    is_superuser: bool = False
-    full_name: Optional[str] = None
-
-
-class UserCreate(UserBase):
-    username: str
-    email: EmailStr
-    password: str
+    id: Optional[int]
+    username: Optional[str]
+    email: Optional[EmailStr]
+    is_active: Optional[bool]
 
     class Config:
         orm_mode = True
 
 
 class UserUpdate(UserBase):
-    username: Optional[str] = None
-    password: Optional[str] = None
+    full_name: Optional[str]
+    password: Optional[str]
+    hashed_password: Optional[str]
+    is_superuser: Optional[bool] = False
+    address: Optional[str]
+    city: Optional[str]
+    country: Optional[str]
+    telephone: Optional[str]
 
 
-class UserInDBBase(UserBase):
-    id: Optional[int] = None
+class UserCreate(UserUpdate):
+    username: str
+    email: EmailStr
+    password: str
 
-    class Config:
-        orm_mode = True
 
-
-class UserResponse(UserInDBBase):
+class UserResponse(UserBase):
     pass
 
 
-class UserInDB(UserInDBBase):
-    hashed_password: str
+class UserInDB(UserUpdate):
+    pass

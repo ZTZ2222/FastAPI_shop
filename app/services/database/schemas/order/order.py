@@ -1,9 +1,8 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import Body
-from pydantic import BaseModel, EmailStr
-from sqlalchemy import true
+from pydantic import BaseModel
 
 
 @dataclass
@@ -22,8 +21,10 @@ class OrderBodySpec:
 
 
 class OrderDTO(BaseModel):
-    full_name: str
-    email: EmailStr
+    id: Optional[int]
+    user_id: int
+    status: str
+    total_price: float
     address: str
     city: str
     country: str
@@ -32,10 +33,21 @@ class OrderDTO(BaseModel):
     class Config:
         orm_mode = True
         schema_extra = {
-            "full_name": "Tilek Zamirov",
-            "email": "tilzam@example.com",
+            "user_id": 32,
+            "status": "Delivered",
+            "total_price": 200,
             "address": "1790 Broadway, NY 10019",
             "city": "New York",
             "country": "USA",
             "telephone": "+1 (360) 921-2552"
         }
+
+
+class OrderItemDTO(BaseModel):
+    id: Optional[int]
+    name: str
+    order_id: int
+    color_id: int
+    size_id: int
+    price: float
+    quantity: int
