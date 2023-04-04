@@ -6,6 +6,11 @@ from app.services.database.database import DatabaseManager
 from app.config.settings import settings
 from app.services.database.repositories.user.user_repository import UserRepository
 from app.services.database.schemas.user import UserCreate, UserResponse, UserUpdate
+from app.services.database.models import User
+from app.services.database.schemas.user import GrantSuperUser
+from app.services.security.oauth2 import get_current_user
+from app.services.security.dependencies import admin_only
+
 
 router = APIRouter(
     prefix="/users",
@@ -29,7 +34,7 @@ async def create_new_user(user_credentials: UserCreate, session: AsyncSession = 
 
 
 @router.put("/update", response_model=UserResponse, status_code=status.HTTP_200_OK)
-async def user_update(user_credentials: UserUpdate, session: AsyncSession = Depends(db.get_db_session)):
+async def user_update(user_credentials: UserUpdate, session: AsyncSession = Depends(db.get_db_session), cur_user: User = Depends(get_current_user)):
 
     user_crud = UserRepository(session)
 
@@ -39,13 +44,17 @@ async def user_update(user_credentials: UserUpdate, session: AsyncSession = Depe
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"User with email: {user_credentials.email} does not exist")
 
+    if not user.id == cur_user.id and not cur_user.is_superuser:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Not enough permissions")
+
     updated_user = await user_crud.update_user(user_credentials)
 
     return updated_user
 
 
 @router.delete("/delete", response_model=UserResponse, status_code=status.HTTP_200_OK)
-async def user_delete(user_credentials: UserUpdate, session: AsyncSession = Depends(db.get_db_session)):
+async def user_delete(user_credentials: UserUpdate, session: AsyncSession = Depends(db.get_db_session), cur_user: User = Depends(get_current_user)):
 
     user_crud = UserRepository(session)
 
@@ -54,6 +63,10 @@ async def user_delete(user_credentials: UserUpdate, session: AsyncSession = Depe
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"User with id: {user_credentials.id} does not exist")
+
+    if not user.id == cur_user.id and not cur_user.is_superuser:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Not enough permissions")
 
     deleted_user = await user_crud.delete_user(user_credentials)
 
@@ -75,7 +88,7 @@ async def user_get_by_id(id: int, session: AsyncSession = Depends(db.get_db_sess
 
 
 @router.get("/", response_model=Sequence[UserResponse], status_code=status.HTTP_200_OK)
-async def user_get_all(session: AsyncSession = Depends(db.get_db_session)):
+async def users_get_all(session: AsyncSession = Depends(db.get_db_session)):
 
     user_crud = UserRepository(session)
 
@@ -86,3 +99,20 @@ async def user_get_all(session: AsyncSession = Depends(db.get_db_session)):
                             detail=f"No users found")
 
     return users
+
+
+@router.patch("/superuser", status_code=status.HTTP_200_OK, dependencies=[Depends(admin_only)])
+async def grand_admin_privileges(user_credentials: GrantSuperUser, session: AsyncSession = Depends(db.get_db_session)):
+
+    user_crud = UserRepository(session)
+
+    user = await user_crud.get_user_by_email(email=user_credentials.email)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"User with id: {user_credentials.id} does not exist")
+
+    superuser = await user_crud.grant_admin_privileges(user=user_credentials)
+    if not superuser.is_superuser:
+        return {"detail": f"User {superuser.email} no longer has administrator privileges."}
+
+    return {"detail": f"User {superuser.email} has been updated to have administrator privileges."}

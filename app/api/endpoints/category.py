@@ -6,6 +6,8 @@ from app.services.database.database import DatabaseManager
 from app.config.settings import settings
 from app.services.database.repositories.product import CategoryRepository
 from app.services.database.schemas.product import CategoryDTO
+from app.services.security.dependencies import admin_only
+
 
 router = APIRouter(
     prefix="/categories",
@@ -15,7 +17,7 @@ db = DatabaseManager()
 db.initialize(settings)
 
 
-@router.post("/create", response_model=CategoryDTO, status_code=status.HTTP_201_CREATED)
+@router.post("/create", response_model=CategoryDTO, status_code=status.HTTP_201_CREATED, dependencies=[Depends(admin_only)])
 async def create_new_category(category: CategoryDTO, session: AsyncSession = Depends(db.get_db_session)):
 
     category_crud = CategoryRepository(session)
@@ -28,7 +30,7 @@ async def create_new_category(category: CategoryDTO, session: AsyncSession = Dep
     return new_category
 
 
-@router.put("/update", response_model=CategoryDTO, status_code=status.HTTP_200_OK)
+@router.put("/update", response_model=CategoryDTO, status_code=status.HTTP_200_OK, dependencies=[Depends(admin_only)])
 async def category_update(category: CategoryDTO, session: AsyncSession = Depends(db.get_db_session)):
 
     category_crud = CategoryRepository(session)
@@ -44,7 +46,7 @@ async def category_update(category: CategoryDTO, session: AsyncSession = Depends
     return updated_category
 
 
-@router.delete("/delete", response_model=CategoryDTO, status_code=status.HTTP_200_OK)
+@router.delete("/delete", response_model=CategoryDTO, status_code=status.HTTP_200_OK, dependencies=[Depends(admin_only)])
 async def category_delete(category: CategoryDTO, session: AsyncSession = Depends(db.get_db_session)):
 
     category_crud = CategoryRepository(session)
@@ -55,7 +57,7 @@ async def category_delete(category: CategoryDTO, session: AsyncSession = Depends
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Category with id: {category.id} does not exist")
 
-    deleted_category = await category_crud.delete_category(category)
+    deleted_category = await category_crud.delete_category(id=category.id)
 
     return Response(status_code=status.HTTP_200_OK, content=f"Category with id: {deleted_category.id} has been deleted")
 

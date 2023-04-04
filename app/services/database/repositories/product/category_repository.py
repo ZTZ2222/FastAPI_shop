@@ -24,3 +24,6 @@ class CategoryRepository(BaseRepository):
 
     async def delete_category(self, id: int) -> Category:
         return await self._delete(Category.id == id)
+
+    async def get_category_products(self):
+        pass

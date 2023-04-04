@@ -16,7 +16,6 @@ class UserUpdate(UserBase):
     full_name: Optional[str]
     password: Optional[str]
     hashed_password: Optional[str]
-    is_superuser: Optional[bool] = False
     address: Optional[str]
     city: Optional[str]
     country: Optional[str]
@@ -35,3 +34,8 @@ class UserResponse(UserBase):
 
 class UserInDB(UserUpdate):
     pass
+
+
+class GrantSuperUser(BaseModel):
+    email: EmailStr
+    is_superuser: bool

@@ -6,6 +6,9 @@ from app.services.database.database import DatabaseManager
 from app.config.settings import settings
 from app.services.database.repositories.product import BrandRepository
 from app.services.database.schemas.product import BrandDTO
+from app.services.database.models import User
+from app.services.security.oauth2 import get_current_user
+from app.services.security.dependencies import admin_only
 
 router = APIRouter(
     prefix="/brands",
@@ -15,7 +18,7 @@ db = DatabaseManager()
 db.initialize(settings)
 
 
-@router.post("/create", response_model=BrandDTO, status_code=status.HTTP_201_CREATED)
+@router.post("/create", response_model=BrandDTO, status_code=status.HTTP_201_CREATED, dependencies=[Depends(admin_only)])
 async def create_new_brand(brand: BrandDTO, session: AsyncSession = Depends(db.get_db_session)):
 
     brand_crud = BrandRepository(session)
@@ -28,7 +31,7 @@ async def create_new_brand(brand: BrandDTO, session: AsyncSession = Depends(db.g
     return new_brand
 
 
-@router.put("/update", response_model=BrandDTO, status_code=status.HTTP_200_OK)
+@router.put("/update", response_model=BrandDTO, status_code=status.HTTP_200_OK, dependencies=[Depends(admin_only)])
 async def brand_update(brand: BrandDTO, session: AsyncSession = Depends(db.get_db_session)):
 
     brand_crud = BrandRepository(session)
@@ -44,7 +47,7 @@ async def brand_update(brand: BrandDTO, session: AsyncSession = Depends(db.get_d
     return updated_brand
 
 
-@router.delete("/delete", response_model=BrandDTO, status_code=status.HTTP_200_OK)
+@router.delete("/delete", response_model=BrandDTO, status_code=status.HTTP_200_OK, dependencies=[Depends(admin_only)])
 async def brand_delete(brand: BrandDTO, session: AsyncSession = Depends(db.get_db_session)):
 
     brand_crud = BrandRepository(session)
@@ -55,7 +58,7 @@ async def brand_delete(brand: BrandDTO, session: AsyncSession = Depends(db.get_d
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Brand with id: {brand.id} does not exist")
 
-    deleted_brand = await brand_crud.delete_brand(brand)
+    deleted_brand = await brand_crud.delete_brand(id=brand.id)
 
     return Response(status_code=status.HTTP_200_OK, content=f"Brand with id: {deleted_brand.id} has been deleted")
 

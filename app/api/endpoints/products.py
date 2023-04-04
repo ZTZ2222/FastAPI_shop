@@ -7,6 +7,9 @@ from app.services.database.database import DatabaseManager
 from app.config.settings import settings
 from app.services.database.repositories.product import ProductRepository, ColorRepository, SizeRepository, RatingRepository
 from app.services.database.schemas.product import ProductCreate, ProductResponse, ProductUpdate, ColorDTO, SizeDTO, RatingDTO
+from app.services.database.models import User
+from app.services.security.oauth2 import get_current_user
+from app.services.security.dependencies import admin_only
 
 router = APIRouter(
     prefix="/products",
@@ -16,7 +19,7 @@ db = DatabaseManager()
 db.initialize(settings)
 
 
-@router.post("/create", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/create", response_model=ProductResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(admin_only)])
 async def create_product(product: ProductCreate, session: AsyncSession = Depends(db.get_db_session)):
 
     product_crud = ProductRepository(session)
@@ -31,7 +34,7 @@ async def create_product(product: ProductCreate, session: AsyncSession = Depends
     return result
 
 
-@router.put("/update", response_model=ProductResponse, status_code=status.HTTP_200_OK)
+@router.put("/update", response_model=ProductResponse, status_code=status.HTTP_200_OK, dependencies=[Depends(admin_only)])
 async def update_product(product: ProductUpdate, session: AsyncSession = Depends(db.get_db_session)):
 
     product_crud = ProductRepository(session)
@@ -60,7 +63,7 @@ async def get_product(id: int, session: AsyncSession = Depends(db.get_db_session
     return result
 
 
-@router.delete("/delete", status_code=status.HTTP_200_OK)
+@router.delete("/delete", status_code=status.HTTP_200_OK, dependencies=[Depends(admin_only)])
 async def delete_product(product: ProductUpdate, session: AsyncSession = Depends(db.get_db_session)):
 
     product_crud = ProductRepository(session)
@@ -76,7 +79,7 @@ async def delete_product(product: ProductUpdate, session: AsyncSession = Depends
 ##########################
 
 
-@router.post("/colors/create", response_model=ColorDTO, status_code=status.HTTP_201_CREATED)
+@router.post("/colors/create", response_model=ColorDTO, status_code=status.HTTP_201_CREATED, dependencies=[Depends(admin_only)])
 async def create_new_color(color: ColorDTO, session: AsyncSession = Depends(db.get_db_session)):
 
     color_crud = ColorRepository(session)
@@ -89,7 +92,7 @@ async def create_new_color(color: ColorDTO, session: AsyncSession = Depends(db.g
     return new_color
 
 
-@router.put("/colors/update", response_model=ColorDTO, status_code=status.HTTP_200_OK)
+@router.put("/colors/update", response_model=ColorDTO, status_code=status.HTTP_200_OK, dependencies=[Depends(admin_only)])
 async def color_update(color: ColorDTO, session: AsyncSession = Depends(db.get_db_session)):
 
     color_crud = ColorRepository(session)
@@ -105,7 +108,7 @@ async def color_update(color: ColorDTO, session: AsyncSession = Depends(db.get_d
     return updated_color
 
 
-@router.delete("/colors/delete", response_model=ColorDTO, status_code=status.HTTP_200_OK)
+@router.delete("/colors/delete", response_model=ColorDTO, status_code=status.HTTP_200_OK, dependencies=[Depends(admin_only)])
 async def color_delete(color: ColorDTO, session: AsyncSession = Depends(db.get_db_session)):
 
     color_crud = ColorRepository(session)
@@ -116,7 +119,7 @@ async def color_delete(color: ColorDTO, session: AsyncSession = Depends(db.get_d
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Color with id: {color.id} does not exist")
 
-    deleted_color = await color_crud.delete_product_color(color)
+    deleted_color = await color_crud.delete_product_color(id=color.id)
 
     return Response(status_code=status.HTTP_200_OK, content=f"Color with id: {deleted_color.id} has been deleted")
 
@@ -154,7 +157,7 @@ async def color_get_all(session: AsyncSession = Depends(db.get_db_session)):
 #########################
 
 
-@router.post("/sizes/create", response_model=SizeDTO, status_code=status.HTTP_201_CREATED)
+@router.post("/sizes/create", response_model=SizeDTO, status_code=status.HTTP_201_CREATED, dependencies=[Depends(admin_only)])
 async def create_new_size(size: SizeDTO, session: AsyncSession = Depends(db.get_db_session)):
 
     size_crud = SizeRepository(session)
@@ -167,7 +170,7 @@ async def create_new_size(size: SizeDTO, session: AsyncSession = Depends(db.get_
     return new_size
 
 
-@router.put("/sizes/update", response_model=SizeDTO, status_code=status.HTTP_200_OK)
+@router.put("/sizes/update", response_model=SizeDTO, status_code=status.HTTP_200_OK, dependencies=[Depends(admin_only)])
 async def size_update(size: SizeDTO, session: AsyncSession = Depends(db.get_db_session)):
 
     size_crud = SizeRepository(session)
@@ -183,7 +186,7 @@ async def size_update(size: SizeDTO, session: AsyncSession = Depends(db.get_db_s
     return updated_size
 
 
-@router.delete("/sizes/delete", response_model=SizeDTO, status_code=status.HTTP_200_OK)
+@router.delete("/sizes/delete", response_model=SizeDTO, status_code=status.HTTP_200_OK, dependencies=[Depends(admin_only)])
 async def size_delete(size: SizeDTO, session: AsyncSession = Depends(db.get_db_session)):
 
     size_crud = SizeRepository(session)
@@ -194,7 +197,7 @@ async def size_delete(size: SizeDTO, session: AsyncSession = Depends(db.get_db_s
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Size with id: {size.id} does not exist")
 
-    deleted_size = await size_crud.delete_product_size(size)
+    deleted_size = await size_crud.delete_product_size(id=size.id)
 
     return Response(status_code=status.HTTP_200_OK, content=f"Size with id: {deleted_size.id} has been deleted")
 
@@ -233,16 +236,17 @@ async def size_get_all(session: AsyncSession = Depends(db.get_db_session)):
 
 
 @router.post("/ratings/create", response_model=RatingDTO, status_code=status.HTTP_201_CREATED)
-async def create_new_rating(rating: RatingDTO, session: AsyncSession = Depends(db.get_db_session)):
+async def create_new_rating(rating: RatingDTO, session: AsyncSession = Depends(db.get_db_session), cur_user: User = Depends(get_current_user)):
+    rating.user_id = cur_user.id
 
     rating_crud = RatingRepository(session)
-
     new_rating = await rating_crud.create_rating(rating)
+
     return new_rating
 
 
 @router.put("/ratings/update", response_model=RatingDTO, status_code=status.HTTP_200_OK)
-async def rating_update(rating: RatingDTO, session: AsyncSession = Depends(db.get_db_session)):
+async def rating_update(rating: RatingDTO, session: AsyncSession = Depends(db.get_db_session), cur_user: User = Depends(get_current_user)):
 
     rating_crud = RatingRepository(session)
 
@@ -251,6 +255,10 @@ async def rating_update(rating: RatingDTO, session: AsyncSession = Depends(db.ge
     if not rating_db:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Rating with id: {rating.id} does not exist")
+
+    if not rating_db.user_id == cur_user.id and not cur_user.is_superuser:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Not enough permissions")
 
     updated_rating = await rating_crud.update_rating(rating)
 
@@ -258,7 +266,7 @@ async def rating_update(rating: RatingDTO, session: AsyncSession = Depends(db.ge
 
 
 @router.delete("/ratings/delete", response_model=RatingDTO, status_code=status.HTTP_200_OK)
-async def rating_delete(rating: RatingDTO, session: AsyncSession = Depends(db.get_db_session)):
+async def rating_delete(rating: RatingDTO, session: AsyncSession = Depends(db.get_db_session), cur_user: User = Depends(get_current_user)):
 
     rating_crud = RatingRepository(session)
 
@@ -268,7 +276,11 @@ async def rating_delete(rating: RatingDTO, session: AsyncSession = Depends(db.ge
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Rating with id: {rating.id} does not exist")
 
-    deleted_rating = await rating_crud.delete_rating(rating)
+    if not rating_db.user_id == cur_user.id and not cur_user.is_superuser:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Not enough permissions")
+
+    deleted_rating = await rating_crud.delete_rating(id=rating.id)
 
     return Response(status_code=status.HTTP_200_OK, content=f"Rating with id: {deleted_rating.id} has been deleted")
 

@@ -18,6 +18,8 @@ class RatingBodySpec:
 
 
 class RatingDTO(BaseModel):
+    id: Optional[int]
+    user_id: Optional[int]
     product_id: int
     stars: float
     comment: Optional[str]

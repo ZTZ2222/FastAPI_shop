@@ -9,6 +9,6 @@ class Token(BaseModel):
 
 
 class TokenPayload(BaseModel):
-    exp: Optional[int] = None
+    user_id: Optional[int] = None
     sub: Optional[str] = None
-    scopes: Optional[list] = []
+    exp: Optional[int] = None
