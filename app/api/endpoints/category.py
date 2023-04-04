@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.database.database import DatabaseManager
 from app.config.settings import settings
 from app.services.database.repositories.product import CategoryRepository
-from app.services.database.schemas.product import CategoryDTO
+from app.services.database.schemas.product import CategoryDTO, CategoryResponse
 from app.services.security.dependencies import admin_only
 
 
@@ -62,21 +62,23 @@ async def category_delete(category: CategoryDTO, session: AsyncSession = Depends
     return Response(status_code=status.HTTP_200_OK, content=f"Category with id: {deleted_category.id} has been deleted")
 
 
-@router.get("/{id}", response_model=CategoryDTO, status_code=status.HTTP_200_OK)
-async def category_get_by_id(id: int, session: AsyncSession = Depends(db.get_db_session)):
+@router.get("/{name}", response_model=CategoryResponse, status_code=status.HTTP_200_OK)
+async def category_get_by_name(name: str, offset: int = 0, limit: int = 20, session: AsyncSession = Depends(db.get_db_session)):
+
+    name = name.title().replace("-", " ")
 
     category_crud = CategoryRepository(session)
 
-    category_db = await category_crud.get_category_by_id(id=id)
+    category_db = await category_crud.get_category_with_products(category_name=name, offset=offset, limit=limit)
 
     if not category_db:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Category with id: {id} does not exist")
+                            detail=f"Category: '{name}' does not exist")
 
     return category_db
 
 
-@router.get("/", response_model=Sequence[CategoryDTO], status_code=status.HTTP_200_OK)
+@router.get("/", response_model=Sequence[CategoryResponse], status_code=status.HTTP_200_OK)
 async def category_get_all(session: AsyncSession = Depends(db.get_db_session)):
 
     category_crud = CategoryRepository(session)

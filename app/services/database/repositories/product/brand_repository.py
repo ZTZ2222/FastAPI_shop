@@ -1,4 +1,7 @@
-from app.services.database.models import Brand
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload
+
+from app.services.database.models import Brand, Product
 from app.services.database.schemas.product import BrandDTO
 from ..base import BaseRepository
 
@@ -24,3 +27,16 @@ class BrandRepository(BaseRepository):
 
     async def delete_brand(self, id: int) -> Brand:
         return await self._delete(Brand.id == id)
+
+    async def get_brand_with_products(self, brand_name: str, offset: int, limit: int) -> Brand:
+        async with self.session as session:
+            stmt = select(Brand).where(Brand.name == brand_name).options(
+                joinedload(Brand.products)
+                .joinedload(Product.color),
+                joinedload(Brand.products)
+                .joinedload(Product.size),
+                joinedload(Brand.products)
+                .joinedload(Product.ratings)
+            ).offset(offset).limit(limit)
+            result = await session.scalar(stmt)
+        return result

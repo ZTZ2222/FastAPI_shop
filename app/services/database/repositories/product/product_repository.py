@@ -65,17 +65,29 @@ class ProductRepository(BaseRepository):
             result = await session.scalar(stmt)
         return result
 
-    async def get_product_by_name(self, name: str):
+    async def get_product_by_name(self, name: str) -> Product:
         async with self.session as session:
             stmt = select(Product).where(Product.name == name).options(selectinload(Product.category), selectinload(
                 Product.brand), selectinload(Product.color), selectinload(Product.size), selectinload(Product.ratings))
             result = await session.scalar(stmt)
         return result
 
-    async def update_product(self, product: ProductUpdate):
+    async def update_product(self, product: ProductUpdate) -> Product:
         product_data = product.dict(exclude_unset=True, exclude_none=True)
         updated_product = await self._update(Product.id == product.id, **product_data)
         return await self.get_product_by_id(id=updated_product.id)
 
-    async def delete_product(self, id: int):
+    async def delete_product(self, id: int) -> Product:
         return await self._delete(Product.id == id)
+
+    async def get_all_products(self, offset: int, limit: int) -> list[Product]:
+        async with self.session as session:
+            stmt = select(Product).options(
+                selectinload(Product.category),
+                selectinload(Product.brand),
+                selectinload(Product.color),
+                selectinload(Product.size),
+                selectinload(Product.ratings)
+            ).offset(offset).limit(limit)
+            result = await session.scalars(stmt)
+        return result.all()

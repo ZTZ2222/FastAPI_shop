@@ -49,6 +49,17 @@ async def update_product(product: ProductUpdate, session: AsyncSession = Depends
     return result
 
 
+@router.delete("/delete", status_code=status.HTTP_200_OK, dependencies=[Depends(admin_only)])
+async def delete_product(product: ProductUpdate, session: AsyncSession = Depends(db.get_db_session)):
+
+    product_crud = ProductRepository(session)
+    deleted_product = await product_crud.delete_product(product.id)
+    if not deleted_product:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Product has been not found")
+    return {"detail": f"Product with id: {deleted_product.id} has been successfully deleted"}
+
+
 @router.get("/{id}", response_model=ProductResponse, status_code=status.HTTP_200_OK)
 async def get_product(id: int, session: AsyncSession = Depends(db.get_db_session)):
 
@@ -63,15 +74,18 @@ async def get_product(id: int, session: AsyncSession = Depends(db.get_db_session
     return result
 
 
-@router.delete("/delete", status_code=status.HTTP_200_OK, dependencies=[Depends(admin_only)])
-async def delete_product(product: ProductUpdate, session: AsyncSession = Depends(db.get_db_session)):
+@router.get("/", response_model=list[ProductResponse], status_code=status.HTTP_200_OK)
+async def get_all_products(offset: int = 0, limit: int = 20, session: AsyncSession = Depends(db.get_db_session)):
 
     product_crud = ProductRepository(session)
-    deleted_product = await product_crud.delete_product(product.id)
-    if not deleted_product:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Product has been not found")
-    return {"detail": f"Product with id: {deleted_product.id} has been successfully deleted"}
+    result = await product_crud.get_all_products(offset=offset, limit=limit)
+
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Product with key id: {id} does not exists"
+        )
+    return result
 
 
 ##########################

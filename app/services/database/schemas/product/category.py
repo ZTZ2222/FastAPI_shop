@@ -1,18 +1,5 @@
-from dataclasses import dataclass
 from typing import Any, Optional
-
-from fastapi import Body
 from pydantic import BaseModel
-
-
-@dataclass
-class CategoryBodySpec:
-    item: Any = Body(
-        ...,
-        example={
-            "name": "Clothing and Accessories"
-        },
-    )
 
 
 class CategoryDTO(BaseModel):
@@ -24,3 +11,7 @@ class CategoryDTO(BaseModel):
         schema_extra = {
             "name": "Clothing and Accessories"
         }
+
+
+class CategoryResponse(CategoryDTO):
+    products: list[Any]

@@ -3,7 +3,9 @@ from typing import Optional, Sequence
 
 from pydantic import BaseModel
 
-from . import CategoryDTO, BrandDTO, RatingDTO
+from .category import CategoryDTO
+from .brand import BrandDTO
+from .rating import RatingDTO
 
 
 class SizeDTO(BaseModel):

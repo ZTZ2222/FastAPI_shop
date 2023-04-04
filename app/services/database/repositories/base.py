@@ -46,5 +46,10 @@ class BaseRepository(ABC):
             stmt = delete(self.model).where(*args).returning(self.model)
             result = await session.scalar(stmt)
             await session.commit()
-            print(result)
         return result
+
+    async def _pagination(self, offset: int, limit: int) -> list[DBModel]:
+        async with self.session as session:
+            stmt = select(self.model).offset(offset).limit(limit)
+            result = await session.scalars(stmt)
+        return result.all()

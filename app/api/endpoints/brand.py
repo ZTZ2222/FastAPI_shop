@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.database.database import DatabaseManager
 from app.config.settings import settings
 from app.services.database.repositories.product import BrandRepository
-from app.services.database.schemas.product import BrandDTO
+from app.services.database.schemas.product import BrandDTO, BrandResponse
 from app.services.database.models import User
 from app.services.security.oauth2 import get_current_user
 from app.services.security.dependencies import admin_only
@@ -63,16 +63,18 @@ async def brand_delete(brand: BrandDTO, session: AsyncSession = Depends(db.get_d
     return Response(status_code=status.HTTP_200_OK, content=f"Brand with id: {deleted_brand.id} has been deleted")
 
 
-@router.get("/{id}", response_model=BrandDTO, status_code=status.HTTP_200_OK)
-async def brand_get_by_id(id: int, session: AsyncSession = Depends(db.get_db_session)):
+@router.get("/{name}", response_model=BrandResponse, status_code=status.HTTP_200_OK)
+async def brand_get_by_id(name: str, offset: int = 0, limit: int = 20, session: AsyncSession = Depends(db.get_db_session)):
+
+    name = name.title().replace("-", " ")
 
     brand_crud = BrandRepository(session)
 
-    brand_db = await brand_crud.get_brand_by_id(id=id)
+    brand_db = await brand_crud.get_brand_with_products(brand_name=name, offset=offset, limit=limit)
 
     if not brand_db:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Brand with id: {id} does not exist")
+                            detail=f"Brand: {name} does not exist")
 
     return brand_db
 
